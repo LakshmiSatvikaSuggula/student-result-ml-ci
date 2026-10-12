@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.git/
+.github/
+test_*.py
+ml_dataset_700.csv
+student_results.csv
+release_candidate/
+venv/
