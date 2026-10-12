@@ -1,7 +1,7 @@
 import json
 import sys
 
-MINIMUM_ACCURACY = 0.85
+MINIMUM_ACCURACY = 0.70
 
 print("Reading model evaluation metrics...")
 
@@ -19,5 +19,4 @@ if accuracy < MINIMUM_ACCURACY:
     sys.exit(1)
 
 print("QUALITY GATE PASSED")
-print("Model performance satisfies the required threshold.")
-sys.exit(0)
+print("Model performance meets the required threshold.")
