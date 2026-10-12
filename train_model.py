@@ -1,54 +1,52 @@
 import json
 import joblib
-import numpy as np
 import pandas as pd
 
+from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
-def create_dataset():
-    rng = np.random.default_rng(42)
-    number_of_students = 300
+def load_dataset():
+    data = pd.read_csv("ml_dataset_700.csv")
+    print("Dataset loaded:", len(data), "records")
 
-    data = pd.DataFrame({
-        "attendance": rng.integers(50, 101, number_of_students),
-        "internal_marks": rng.integers(20, 101, number_of_students),
-        "assignment_marks": rng.integers(30, 101, number_of_students),
-        "previous_score": rng.integers(30, 101, number_of_students),
-    })
+    # Drop ID column — not a feature
+    data = data.drop(columns=["customer_id"])
 
-    data["weighted_score"] = (
-        0.25 * data["attendance"]
-        + 0.35 * data["internal_marks"]
-        + 0.20 * data["assignment_marks"]
-        + 0.20 * data["previous_score"]
-    )
-
-    # 1 = PASS, 0 = FAIL
-    data["result"] = (data["weighted_score"] >= 60).astype(int)
+    # Drop rows with missing values (safety)
+    data = data.dropna()
+    print("Records after cleaning:", len(data))
     return data
 
 
 def train_model():
-    print("Creating dataset...")
-    data = create_dataset()
-    data.to_csv("student_results.csv", index=False)
-    print("Dataset created successfully.")
-    print("Number of records:", len(data))
+    data = load_dataset()
+    data.to_csv("student_results.csv", index=False)   # keep this filename for compatibility
+    print("Dataset snapshot saved as student_results.csv")
 
-    features = [
-        "attendance",
-        "internal_marks",
-        "assignment_marks",
-        "previous_score",
+    target = "churn"
+    numerical_features = [
+        "age",
+        "tenure_months",
+        "monthly_charges",
+        "total_charges",
+        "num_support_calls",
+        "satisfaction_score",
+    ]
+    categorical_features = [
+        "gender",
+        "contract_type",
+        "payment_method",
+        "internet_service",
+        "tech_support",
     ]
 
-    X = data[features]
-    y = data["result"]
+    X = data[numerical_features + categorical_features]
+    y = data[target]
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.20, random_state=42, stratify=y
@@ -57,8 +55,15 @@ def train_model():
     print("Training records:", len(X_train))
     print("Testing records:", len(X_test))
 
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("num", StandardScaler(), numerical_features),
+            ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features),
+        ]
+    )
+
     model = Pipeline([
-        ("scaler", StandardScaler()),
+        ("preprocessor", preprocessor),
         ("classifier", LogisticRegression(max_iter=1000, random_state=42)),
     ])
 
