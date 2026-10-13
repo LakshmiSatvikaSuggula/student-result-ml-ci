@@ -38,10 +38,10 @@ def load_model():
 @app.get("/")
 def health_check():
     return jsonify({
-        "status": "ok",
-        "service": "customer-churn-prediction"
-    })
-
+    "status": "ok",
+    "service": "customer-churn-prediction",
+    "version": "v2"
+})
 
 @app.post("/predict")
 def predict():
