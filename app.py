@@ -64,12 +64,15 @@ def _log_request(response):
         
     duration_ms = (time.perf_counter() - g.start_time) * 1000
     level = logging.WARNING if response.status_code >= 400 else logging.INFO
+    
+    # --- FIX APPLIED HERE: using request.path instead of request.url.path ---
     logger.log(
         level,
         "event=http_request request_id=%s method=%s path=%s status=%s duration_ms=%.2f",
-        g.request_id, request.method, request.url.path,
+        g.request_id, request.method, request.path,
         response.status_code, duration_ms,
     )
+    
     response.headers["X-Request-ID"] = g.request_id
     return response
 
